@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="FarmerAutomatic Alfresco Repository" default="deploy" basedir=".">
+    <property file="build.properties"/>
+    <property name="project.name" value="farmerautomatic-alfresco-repository"/>
+    <property name="module.id" value="com.farmerautomatic.module.alfresco.repository"/>
+
+    <property name="project.dir" value="."/>
+    <property name="build.dir" value="${project.dir}/build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="lib.dir" value="${project.dir}/lib"/>
+    <property name="package.file.zip" value="${build.dir}/${project.name}.zip"/>
+    <property name="package.file.jar" value="${build.dir}/${project.name}.jar"/>
+    <property name="project.file.zip" value="${build.dir}/${project.name}-project.zip"/>
+    <property name="package.file.amp" value="${build.dir}/${project.name}.amp"/>
+    <property name="module.dir" value="alfresco/module"/>
+    <property name="source.dir" value="${project.dir}/src"/>
+    <property name="config.dir" value="${project.dir}/config"/>
+    <property name="data.dir" value="${project.dir}/data"/>
+    <property name="web.dir" value="${project.dir}/web"/>
+
+    <property name="test.dir" value="${project.dir}/test"/>
+    <property name="test.build.dir" value="${test.dir}/build"/>
+    <property name="test.lib.dir" value="${test.dir}/lib"/>
+    <property name="test.reports.dir" value="${test.dir}/reports"/>
+
+    <path id="classpath">
+        <fileset dir="${alfresco.sdk.remote.dir}" includes="**/*.jar"/>
+        <fileset dir="${alfresco.sdk.server.dir}" includes="**/*.jar"/>
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <target name="clean" description="Removes all generated files">
+        <delete dir="${build.dir}"/>
+        <delete dir="${classes.dir}"/>
+    </target>
+
+    <target name="clean-tomcat"
+            description="Removes deployed extension directory (including other projects)">
+        <delete dir="${alfresco.web.dir}/WEB-INF/classes/alfresco/extension"/>
+        <delete dir="${alfresco.web.dir}/WEB-INF/classes/alfresco/module"/>
+        <delete dir="${alfresco.web.dir}/jsp/extension"/>
+    </target>
+
+    <target name="setup"
+            description="Creates the ${build.dir} and ${classes.dir} directories">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+    </target>
+
+    <target name="package-extension" depends="setup, package-jar"
+            description="Creates a zip called ${package.file.zip} which can be unzipped on top of an exploded Alfresco web app">
+        <delete file="${package.file.zip}"/>
+        <zip destfile="${package.file.zip}" update="true">
+            <zipfileset dir="${config.dir}" prefix="WEB-INF/classes"/>
+            <zipfileset file="${package.file.jar}" prefix="WEB-INF/lib"/>
+            <zipfileset dir="${lib.dir}" includes="**/*.jar" prefix="WEB-INF/lib"/>
+            <zipfileset dir="${web.dir}" excludes="META-INF/**"/>
+        </zip>
+    </target>
+
+    <target name="package-amp" depends="setup, package-jar"
+            description="Packages the customizations as an Alfresco module in ${package.file.amp}">
+        <delete file="${package.file.amp}"/>
+        <zip destfile="${package.file.amp}">
+            <zipfileset file="${package.file.jar}" prefix="lib"/>
+            <zipfileset file="${lib.dir}/**" prefix="lib"/>
+            <zipfileset dir="${web.dir}" prefix="web"/>
+            <zipfileset file="${config.dir}/${module.dir}/${module.id}/module.properties"/>
+            <zipfileset file="${config.dir}/${module.dir}/${module.id}/file-mapping.properties"/>
+            <zipfileset file="${config.dir}/**" prefix="config"
+                        excludes="**/module.properties,**/file-mapping.properties"/>
+        </zip>
+    </target>
+
+    <target name="install-amp" depends="package-amp"
+            description="Uses the Alfresco MMT to install the AMP into ${alfresco.war.path}">
+        <java dir="." fork="true"
+              classname="org.alfresco.repo.module.tool.ModuleManagementTool">
+            <classpath refid="classpath"/>
+            <arg
+                    line="install ${package.file.amp} ${alfresco.war.path} -force -verbose"/>
+        </java>
+    </target>
+
+    <target name="deploy-amp" depends="install-amp"
+            description="Unzips the AMP'd WAR file into ${alfresco.web.dir}">
+        <unzip src="${alfresco.war.path}" dest="${alfresco.web.dir}"/>
+    </target>
+
+    <target name="deploy" depends="package-extension"
+            description="Unzips the ${package.file.zip} into ${alfresco.web.dir}">
+        <unzip src="${package.file.zip}" dest="${alfresco.web.dir}"/>
+    </target>
+
+    <target name="zip-project" depends="setup"
+            description="Zips the entire Eclipse project as-is into ${project.file.zip}">
+        <delete file="${project.file.zip}"/>
+        <zip destfile="${project.file.zip}">
+            <zipfileset dir="${project.dir}" excludes="build/** bin/**"
+                        prefix="client-extensions"/>
+        </zip>
+    </target>
+
+    <target name="compile" description="Compiles src to ${classes.dir}">
+        <!--echo message="| |- ${echo.path.compile}"/ -->
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${source.dir}/java" destdir="${classes.dir}" source="1.5"
+               target="1.5" debug="on" fork="yes">
+            <compilerarg value="-Xlint:unchecked"/>
+            <compilerarg value="-Xlint:deprecation"/>
+            <classpath refid="classpath"/>
+        </javac>
+        <!-- copy in non-compiled files like props if needed -->
+        <copy todir="${classes.dir}">
+            <fileset dir="${source.dir}/java" excludes="**/*.java"/>
+        </copy>
+    </target>
+
+    <!-- get the source compile classpath in a printable form -->
+    <pathconvert pathsep="${line.separator}|   |-- " property="echo.path.compile"
+                 refid="classpath">
+    </pathconvert>
+
+    <target name="package-jar" depends="setup,compile"
+            description="Jars up the compiled classes and ${web.dir}/META-INF into ${package.file.jar}">
+        <delete file="${package.file.jar}"/>
+        <jar destfile="${package.file.jar}">
+            <fileset dir="${classes.dir}" includes="com/**"/>
+            <fileset dir="${classes.dir}" includes="edu/**"/>
+            <fileset dir="${classes.dir}" includes="org/**"/>
+            <!--
+			<zipfileset dir="${web.dir}/META-INF" excludes="*.zip"
+				prefix="META-INF" />
+			-->
+        </jar>
+    </target>
+
+    <path id="classpath.test">
+        <pathelement location="${classes.dir}"/>
+        <pathelement location="${test.build.dir}"/>
+        <pathelement location="${test.dir}"/>
+        <fileset dir="${test.lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <path refid="classpath"/>
+    </path>
+
+    <target name="test-clean" depends="clean" description="Cleans test files">
+        <delete dir="${test.reports.dir}"/>
+        <delete dir="${test.build.dir}"/>
+    </target>
+
+    <target name="test-compile" depends="compile" description="Compiles test src to ${test.build.dir}">
+        <mkdir dir="${test.build.dir}"/>
+        <javac srcdir="${test.dir}/java" destdir="${test.build.dir}" source="1.5"
+               target="1.5" debug="on" fork="yes">
+            <compilerarg value="-Xlint:unchecked"/>
+            <compilerarg value="-Xlint:deprecation"/>
+            <classpath refid="classpath.test"/>
+        </javac>
+        <!-- copy in non-compiled files like props if needed -->
+        <copy todir="${test.build.dir}">
+            <fileset dir="${test.dir}/java" excludes="**/*.java"/>
+        </copy>
+    </target>
+
+    <target name="test" depends="test-clean, test-compile" description="Runs the JUnit test">
+        <junit fork="yes" haltonfailure="yes">
+            <batchtest fork="yes">
+                <fileset dir="${test.dir}/java">
+                    <include name="**/*Test*.java"/>
+                    <exclude name="**/AllTests.java"/>
+                </fileset>
+            </batchtest>
+            <formatter type="plain" usefile="no"/>
+            <classpath refid="classpath.test"/>
+        </junit>
+    </target>
+
+    <target name="test-report" depends="test-clean, test-compile"
+            description="Runs the JUnit test and generates reports">
+        <mkdir dir="${test.reports.dir}"/>
+        <junit fork="yes" haltonfailure="no" showoutput="yes">
+            <batchtest fork="yes">
+                <fileset dir="${test.dir}/java">
+                    <include name="**/*Test*.java"/>
+                    <exclude name="**/AllTests.java"/>
+                </fileset>
+            </batchtest>
+            <formatter type="xml" usefile="yes"/>
+            <classpath refid="classpath.test"/>
+        </junit>
+        <junitreport todir="${test.reports.dir}">
+            <fileset dir="${project.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report todir="${test.reports.dir}"/>
+        </junitreport>
+        <delete>
+            <fileset dir="${project.dir}" includes="TEST-*.xml"/>
+        </delete>
+    </target>
+
+</project>

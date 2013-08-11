@@ -1,0 +1,10 @@
+*.iml
+*.ipr
+*.iws
+.idea/
+
+repository/build/
+share/build/
+
+repository/build.properties
+share/build.properties

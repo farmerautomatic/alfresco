@@ -1,0 +1,9 @@
+alfresco.sdk.dir=/Users/drq/dev/alfresco/alfresco-community-sdk-4.2.c
+alfresco.dir=/Users/drq/dev/alfresco/alfresco-4.2.c
+
+tomcat.webapps.dir=${alfresco.dir}/tomcat/webapps
+alfresco.web.dir=${tomcat.webapps.dir}/alfresco
+alfresco.war.path=${tomcat.webapps.dir}/alfresco.war
+
+alfresco.sdk.remote.dir=${alfresco.sdk.dir}/lib/remote
+alfresco.sdk.server.dir=${alfresco.sdk.dir}/lib/server
