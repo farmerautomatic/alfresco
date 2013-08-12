@@ -1,0 +1,160 @@
+<alfresco-config>
+
+    <!-- Global config section -->
+    <config>
+        <flags>
+            <!--
+               Developer debugging setting to turn on DEBUG mode for client scripts in the browser
+            -->
+            <client-debug>true</client-debug>
+            <!--
+               LOGGING can always be toggled at runtime when in DEBUG mode (Ctrl, Ctrl, Shift, Shift).
+               This flag automatically activates logging on page load.
+            -->
+            <client-debug-autologging>true</client-debug-autologging>
+        </flags>
+    </config>
+
+    <!-- Repository Library config section -->
+    <config evaluator="string-compare" condition="RepositoryLibrary" replace="true">
+        <!-- Whether the link to the Repository Library appears in the header component or not. -->
+        <visible>true</visible>
+    </config>
+
+    <config evaluator="string-compare" condition="DocumentLibrary">
+        <aspects>
+            <visible>
+                <aspect name="fa:documentable"/>
+            </visible>
+        </aspects>
+        <types>
+            <type name="cm:content">
+                <subtype name="fa:document"/>
+            </type>
+        </types>
+    </config>
+
+   <config replace="true" evaluator="string-compare" condition="AdvancedSearch">
+      <advanced-search>
+         <!-- Forms for the advanced search type list -->
+         <forms>
+            <!--
+               The 'form' config element contains the name of the model type
+               of the form to display.
+
+               The element supports the following optional attributes:
+                  id = form id, the id of "search" will be assumed if not set
+                  label = label text to display - defaults to model type if not set
+                  labelId = I18N message id of label text to display
+                  description = description text to display
+                  descriptionId = I18N message id of description text to display
+            -->
+            <form labelId="type.fa_document" descriptionId="search.form.desc.fa_document">fa:document</form>
+            <form labelId="search.form.label.cm_content" descriptionId="search.form.desc.cm_content">cm:content</form>
+            <form labelId="search.form.label.cm_folder" descriptionId="search.form.desc.cm_folder">cm:folder</form>
+         </forms>
+      </advanced-search>
+   </config>
+
+    <!-- Document Library Actions config section -->
+    <config evaluator="string-compare" condition="DocLibActions">
+        <!-- Action definitions -->
+        <actions>
+        </actions>
+
+        <!-- Action Group definitions -->
+        <actionGroups>
+            <actionGroup id="document-browse">
+            </actionGroup>
+            <actionGroup id="document-details">
+            </actionGroup>
+        </actionGroups>
+    </config>
+
+    <config evaluator="node-type" condition="cm:content">
+        <forms>
+            <form>
+                <field-visibility>
+                    <show id="fa:keywords"/>
+                    <show id="fa:invoiceNumber"/>
+                    <show id="fa:orderNumber"/>
+                </field-visibility>
+            </form>
+            <form id="doclib-simple-metadata">
+                <field-visibility>
+                    <show id="fa:keywords"/>
+                    <show id="fa:invoiceNumber"/>
+                    <show id="fa:orderNumber"/>
+                </field-visibility>
+            </form>
+        </forms>
+    </config>
+
+    <!-- Farmer Automatic Document Configuration -->
+    <config evaluator="model-type" condition="fa:document">
+        <forms>
+            <!-- Search form -->
+            <form id="search">
+                <field-visibility>
+                    <show id="cm:name"/>
+                    <show id="fa:keywords"/>
+                    <show id="fa:invoiceNumber"/>
+                    <show id="fa:orderNumber"/>
+                </field-visibility>
+                <appearance>
+                    <field id="mimetype">
+                        <control template="/org/alfresco/components/form/controls/mimetype.ftl"/>
+                    </field>
+                </appearance>
+            </form>
+        </forms>
+    </config>
+    <config evaluator="node-type" condition="fa:document">
+        <forms>
+            <form>
+                <field-visibility>
+                    <show id="cm:name"/>
+                    <show id="cm:title" force="true"/>
+                    <show id="cm:description" force="true"/>
+                    <show id="mimetype" for-mode="view"/>
+                    <show id="size" for-mode="view"/>
+                    <show id="cm:creator" for-mode="view"/>
+                    <show id="cm:created" for-mode="view"/>
+                    <show id="cm:modifier" for-mode="view"/>
+                    <show id="cm:modified" for-mode="view"/>
+                    <show id="fa:keywords"/>
+                    <show id="fa:invoiceNumber"/>
+                    <show id="fa:orderNumber"/>
+                </field-visibility>
+                <appearance>
+                    <field id="cm:title">
+                        <control template="/org/alfresco/components/form/controls/textfield.ftl"/>
+                    </field>
+                    <field id="mimetype">
+                        <control template="/org/alfresco/components/form/controls/mimetype.ftl"/>
+                    </field>
+                    <field id="size">
+                        <control template="/org/alfresco/components/form/controls/size.ftl"/>
+                    </field>
+                </appearance>
+            </form>
+            <!-- Document Library Inline Edit form -->
+            <form id="doclib-inline-edit">
+                <field-visibility>
+                    <show id="cm:name"/>
+                    <show id="cm:title" force="true"/>
+                    <show id="cm:description" force="true"/>
+                    <show id="fa:keywords"/>
+                    <show id="fa:invoiceNumber"/>
+                    <show id="fa:orderNumber"/>
+                </field-visibility>
+                <appearance>
+                    <field id="cm:title">
+                        <control template="/org/alfresco/components/form/controls/textfield.ftl"/>
+                    </field>
+                </appearance>
+            </form>
+        </forms>
+    </config>
+
+</alfresco-config>

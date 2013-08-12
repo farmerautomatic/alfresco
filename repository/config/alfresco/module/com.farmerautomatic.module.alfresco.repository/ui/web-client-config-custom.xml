@@ -1,0 +1,23 @@
+<alfresco-config>
+
+    <config evaluator="string-compare" condition="Content Wizards">
+        <content-types>
+            <type name="fa:document"/>
+        </content-types>
+    </config>
+
+    <config evaluator="string-compare" condition="Space Wizards">
+        <!-- The list of custom folder types to show in the advanced space wizard -->
+        <folder-types>
+        </folder-types>
+    </config>
+
+    <config evaluator="aspect-name" condition="fa:documentable">
+        <property-sheet>
+            <show-property name="fa:keywords"/>
+            <show-property name="fa:invoiceNumber"/>
+            <show-property name="fa:orderNumber"/>
+        </property-sheet>
+    </config>
+
+</alfresco-config>

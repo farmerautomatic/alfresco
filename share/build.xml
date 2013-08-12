@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Farmer Automatic Alfresco Share" default="deploy" basedir=".">
+    <property file="build.properties"/>
+    <property name="project.name" value="farmerautomatic-alfresco-share"/>
+    <property name="module.id" value="com.farmerautomatic.module.alfresco.share"/>
+
+    <property name="project.dir" value="."/>
+    <property name="build.dir" value="${project.dir}/build"/>
+    <property name="classes.dir" value="${build.dir}/classes" />
+    <property name="lib.dir" value="${project.dir}/lib" />
+
+    <property name="package.file.zip" value="${build.dir}/${project.name}.zip"/>
+    <property name="package.file.jar" value="${build.dir}/${project.name}.jar" />
+    <property name="package.file.amp" value="${build.dir}/${project.name}.amp"/>
+    <property name="module.dir" value="module"/>
+    <property name="source.dir" value="${project.dir}/src" />
+
+    <property name="config.dir" value="${project.dir}/config/alfresco"/>
+    <property name="web.dir" value="${project.dir}/web"/>
+    <property name="extension.dir" value="${config.dir}/web-extension"/>
+
+    <property name="alfresco.web.dir" value="${alfresco.dir}/tomcat/webapps/share"/>
+    <property name="alfresco.mmt.dir" value="${alfresco.dir}/bin"/>
+    <property name="alfresco.war.path" value="${alfresco.dir}/tomcat/webapps/share.war"/>
+
+    <property name="build.web.dir" value="${build.dir}/web"/>
+    <property name="yui-compressor" value="../tools/yui-compressor/yuicompressor-2.4.7.jar"/>
+
+	<path id="classpath">
+        <fileset dir="${alfresco.dir}/tomcat/lib" includes="**/*.jar" />
+		<fileset dir="${alfresco.web.dir}/WEB-INF/lib" includes="**/*.jar" />
+		<fileset dir="${lib.dir}" includes="**/*.jar" />
+	</path>
+
+    <target name="clean" description="Removes all generated files">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="setup" description="Creates the ${build.dir} directories">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.web.dir}"/>
+        <delete includeemptydirs="true">
+            <fileset dir="${build.web.dir}" includes="**/*"/>
+        </delete>
+    </target>
+
+    <target name="package-extension" depends="setup, package-jar, compress-css, compress-js"
+            description="Creates a zip called ${package.file.zip} which can be unzipped on top of an exploded Alfresco web app">
+        <delete file="${package.file.zip}"/>
+        <zip destfile="${package.file.zip}" update="true">
+            <zipfileset dir="${config.dir}" prefix="WEB-INF/classes/alfresco"/>
+            <zipfileset file="${package.file.jar}" prefix="WEB-INF/lib" />
+            <zipfileset dir="${web.dir}" excludes="META-INF/**"/>
+            <zipfileset dir="${build.web.dir}" prefix="web">
+                <include name="**/*-min.js"/>
+                <include name="**/*-min.css"/>
+            </zipfileset>
+        </zip>
+    </target>
+
+    <target name="package-amp" depends="setup, package-jar, compress-css, compress-js"
+            description="Packages the customizations as an Alfresco module in ${package.file.amp}">
+        <delete file="${package.file.amp}"/>
+        <zip destfile="${package.file.amp}">
+			<zipfileset file="${package.file.jar}" prefix="lib" />
+			<zipfileset file="${lib.dir}/**" prefix="lib" />
+            <zipfileset dir="${web.dir}" prefix="web"/>
+            <zipfileset dir="${config.dir}/web-extension" prefix="config/alfresco/web-extension"/>
+            <zipfileset file="${config.dir}/${module.dir}/${module.id}/module.properties"/>
+            <zipfileset file="${config.dir}/${module.dir}/${module.id}/file-mapping.properties"/>
+            <zipfileset dir="${build.web.dir}">
+                <include name="**/*-min.js"/>
+                <include name="**/*-min.css"/>
+            </zipfileset>
+        </zip>
+    </target>
+
+    <target name="deploy" depends="package-extension"
+            description="Unzips the ${package.file.zip} into ${alfresco.web.dir}">
+        <unzip src="${package.file.zip}" dest="${alfresco.web.dir}"/>
+    </target>
+
+	<target name="compile" description="Compiles src to ${classes.dir}">
+		<!--echo message="| |- ${echo.path.compile}"/ -->
+		<mkdir dir="${classes.dir}" />
+		<javac srcdir="${source.dir}/java" destdir="${classes.dir}" source="1.5"
+			target="1.5" debug="on" fork="yes">
+			<compilerarg value="-Xlint:unchecked" />
+			<compilerarg value="-Xlint:deprecation" />
+			<classpath refid="classpath" />
+		</javac>
+		<!-- copy in non-compiled files like props if needed -->
+		<copy todir="${classes.dir}">
+			<fileset dir="${source.dir}/java" excludes="**/*.java" />
+		</copy>
+	</target>
+
+	<!-- get the source compile classpath in a printable form -->
+	<pathconvert pathsep="${line.separator}|   |-- " property="echo.path.compile"
+		refid="classpath">
+	</pathconvert>
+
+	<target name="package-jar" depends="setup,compile"
+		description="Jars up the compiled classes and ${web.dir}/META-INF into ${package.file.jar}">
+		<delete file="${package.file.jar}" />
+		<jar destfile="${package.file.jar}">
+			<fileset dir="${classes.dir}" includes="com/**" />
+			<fileset dir="${classes.dir}" includes="edu/**" />
+			<fileset dir="${classes.dir}" includes="org/**" />
+            <!--
+			<zipfileset dir="${web.dir}/META-INF" excludes="*.zip"
+				prefix="META-INF" />
+			-->
+		</jar>
+	</target>
+
+    <target name="compress-js" description="Compress the javascript" depends="setup">
+        <echo>Compressing Javascript files...</echo>
+        <copy todir="${build.web.dir}">
+            <fileset dir="${web.dir}">
+                <include name="**/*.js"/>
+                <exclude name="**/*-min.js"/>
+                <exclude name="**/*.min.js"/>
+            </fileset>
+        </copy>
+        <apply executable="java" parallel="false" dest="${build.web.dir}">
+            <fileset dir="${build.web.dir}">
+                <include name="**/*.js"/>
+                <exclude name="**/*-min.js"/>
+                <exclude name="**/*.min.js"/>
+            </fileset>
+            <arg line="-jar"/>
+            <arg path="${yui-compressor}"/>
+            <arg line="-o"/>
+            <targetfile/>
+            <srcfile/>
+            <mapper type="glob" from="*.js" to="*-min.js"/>
+        </apply>
+    </target>
+
+    <target name="compress-css" description="Compress the stylesheet" depends="setup">
+        <echo>Compressing Stylesheet files...</echo>
+        <copy todir="${build.web.dir}">
+            <fileset dir="${web.dir}">
+                <include name="**/*.css"/>
+                <exclude name="**/*-min.css"/>
+                <exclude name="**/*.min.css"/>
+            </fileset>
+        </copy>
+        <apply executable="java" parallel="false" dest="${build.web.dir}">
+            <fileset dir="${build.web.dir}">
+                <include name="**/*.css"/>
+                <exclude name="**/*-min.css"/>
+                <exclude name="**/*.min.css"/>
+            </fileset>
+            <arg line="-jar"/>
+            <arg path="${yui-compressor}"/>
+            <arg line="-o"/>
+            <targetfile/>
+            <srcfile/>
+            <mapper type="glob" from="*.css" to="*-min.css"/>
+        </apply>
+    </target>
+</project>

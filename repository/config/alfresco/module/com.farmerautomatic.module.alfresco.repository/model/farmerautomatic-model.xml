@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="fa:farmerautomaticModel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+
+    <description>Farmer Automatic Content Model</description>
+    <author>Farmer Automatic</author>
+    <version>1.0</version>
+
+    <imports>
+        <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+        <import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
+        <import uri="http://www.alfresco.org/model/system/1.0" prefix="sys"/>
+        <import uri="http://www.alfresco.org/model/datalist/1.0" prefix="dl"/>
+        <import uri="http://www.alfresco.org/model/forum/1.0" prefix="fm"/>
+    </imports>
+
+    <namespaces>
+        <namespace uri="http://www.farmerautomatic.com/model/farmerautomatic/1.0" prefix="fa"/>
+    </namespaces>
+
+    <!-- CONSTRAINTS -->
+    <constraints>
+    </constraints>
+
+    <!-- CUSTOM TYPES -->
+    <types>
+        <type name="fa:document">
+            <title>Farmer Automatic Document</title>
+            <parent>cm:content</parent>
+            <properties>
+            </properties>
+			<mandatory-aspects>
+				<aspect>fa:documentable</aspect>
+				<aspect>cm:versionable</aspect>
+			</mandatory-aspects>
+        </type>
+    </types>
+
+    <!-- ASPECTS -->
+    <aspects>
+        <aspect name="fa:documentable">
+            <title>Farmer Automatic Documentable</title>
+            <properties>
+                <property name="fa:keywords">
+                    <title>Keywords</title>
+                    <type>d:text</type>
+                </property>
+                <property name="fa:invoiceNumber">
+                    <title>Invoice Number</title>
+                    <type>d:text</type>
+                </property>
+                <property name="fa:orderNumber">
+                    <title>Order Number</title>
+                    <type>d:text</type>
+                </property>
+            </properties>
+        </aspect>
+    </aspects>
+
+</model>
