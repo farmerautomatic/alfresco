@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="extracter.farmerautomatic.PDFBox"
+          class="com.farmerautomatic.repo.content.metadata.CustomPdfBoxMetadataExtracter"
+          parent="baseMetadataExtracter">
+        <property name="inheritDefaultMapping">
+            <value>true</value>
+        </property>
+
+        <property name="mappingProperties">
+            <props>
+                <prop key="namespace.prefix.fa">http://www.farmerautomatic.com/model/farmerautomatic/1.0</prop>
+                <prop key="namespace.prefix.cm">http://www.alfresco.org/model/content/1.0</prop>
+                <prop key="keyword">fa:keywords</prop>
+            </props>
+        </property>
+
+    </bean>
+</beans>
